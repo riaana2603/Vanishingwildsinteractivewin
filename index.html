@@ -40,7 +40,7 @@ h1 {
 }
 
 button {
-    margin: 10px;
+    margin: 8px;
     padding: 10px 18px;
     border-radius: 20px;
     border: none;
@@ -67,7 +67,7 @@ button {
 
 .small {
     font-size: 12px;
-    opacity: 0.8;
+    opacity: 0.85;
 }
 </style>
 </head>
@@ -246,9 +246,28 @@ function commentPost(i) {
 
     posts[i].comments.push({
         user: account ? account.name : "Anonymous",
-        text: c
+        text: c,
+        createdAt: Date.now()
     });
 
+    savePosts();
+}
+
+/* DELETE COMMENT (NEW FEATURE) */
+function deleteComment(postIndex, commentIndex) {
+    let comment = posts[postIndex].comments[commentIndex];
+    if (!comment) return;
+
+    let isOwner = account && comment.user === account.name;
+    let isAdminUser = isAdmin;
+    let within5s = Date.now() - comment.createdAt <= 5000;
+
+    if (!isAdminUser && !(isOwner && within5s)) {
+        alert("You can only delete your own comment within 5 seconds.");
+        return;
+    }
+
+    posts[postIndex].comments.splice(commentIndex, 1);
     savePosts();
 }
 
@@ -272,7 +291,12 @@ function renderPosts() {
             <button onclick="commentPost(${i})">Comment</button>
 
             <div class="small">
-                ${p.comments.map(c => `<div><b>${c.user}:</b> ${c.text}</div>`).join("")}
+                ${p.comments.map((c, ci) => `
+                    <div>
+                        <b>${c.user}:</b> ${c.text}
+                        <button onclick="deleteComment(${i}, ${ci})">delete</button>
+                    </div>
+                `).join("")}
             </div>
         `;
 
