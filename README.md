@@ -1,4 +1,3 @@
-# Vanishingwildsinteractivewin
 <!DOCTYPE html>
 <html lang="en">
 <head>
