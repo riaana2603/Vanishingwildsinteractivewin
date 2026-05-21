@@ -253,7 +253,7 @@ function commentPost(i) {
     savePosts();
 }
 
-/* DELETE COMMENT (NEW FEATURE) */
+/* DELETE COMMENT */
 function deleteComment(postIndex, commentIndex) {
     let comment = posts[postIndex].comments[commentIndex];
     if (!comment) return;
@@ -268,6 +268,17 @@ function deleteComment(postIndex, commentIndex) {
     }
 
     posts[postIndex].comments.splice(commentIndex, 1);
+    savePosts();
+}
+
+/* DELETE POST (NEW FIX) */
+function deletePost(i) {
+    if (prompt("Enter password:") !== PASSWORD) {
+        alert("Wrong password");
+        return;
+    }
+
+    posts.splice(i, 1);
     savePosts();
 }
 
@@ -289,6 +300,7 @@ function renderPosts() {
                 ${account && p.likedBy.includes(account.name) ? "Unlike" : "Like"}
             </button>
             <button onclick="commentPost(${i})">Comment</button>
+            <button onclick="deletePost(${i})">Delete</button>
 
             <div class="small">
                 ${p.comments.map((c, ci) => `
