@@ -2,13 +2,12 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>You Chose to Care</title>
 
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500&family=Inter:wght@300;400&display=swap" rel="stylesheet">
 
 <style>
+
 body {
     margin: 0;
     font-family: 'Inter', sans-serif;
@@ -16,7 +15,7 @@ body {
     text-align: center;
 
     background:
-        linear-gradient(rgba(0,0,0,0.35), rgba(0,0,0,0.55)),
+        linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.75)),
         url('https://images.unsplash.com/photo-1501785888041-af3ef285b470');
 
     background-size: cover;
@@ -24,9 +23,7 @@ body {
     background-attachment: fixed;
 }
 
-.container {
-    margin-top: 120px;
-}
+.container { margin-top: 120px; }
 
 h1 {
     font-family: 'Playfair Display', serif;
@@ -34,41 +31,137 @@ h1 {
 }
 
 .info {
-    max-width: 500px;
-    margin: 10px auto;
     opacity: 0.85;
+    max-width: 500px;
+    margin: auto;
 }
 
+/* BUTTONS */
 button {
-    margin: 8px;
-    padding: 10px 18px;
-    border-radius: 20px;
+    margin: 10px;
+    padding: 12px 20px;
+    border-radius: 25px;
     border: none;
     background: rgba(255,255,255,0.2);
     color: white;
     cursor: pointer;
+    transition: 0.2s;
 }
 
-.section {
-    max-width: 750px;
-    margin: 40px auto;
+button:hover {
+    background: rgba(255,255,255,0.35);
+}
+
+/* PANEL */
+#panel {
+    position: fixed;
+    right: 0;
+    top: 0;
+    width: 320px;
+    height: 100%;
+    background: rgba(0,0,0,0.85);
+    backdrop-filter: blur(12px);
+    padding: 20px;
+    transform: translateX(100%);
+    transition: 0.3s;
+    display: flex;
+    flex-direction: column;
+}
+
+#panel.active { transform: translateX(0); }
+
+#nameList {
+    flex: 1;
+    overflow-y: auto;
+}
+
+/* NAME ITEM */
+.nameItem {
+    display: flex;
+    justify-content: space-between;
+    padding: 10px;
+    margin: 6px 0;
+    background: rgba(255,255,255,0.06);
+    border-radius: 8px;
+    position: relative;
+}
+
+/* MENU */
+.menuBtn { cursor: pointer; }
+
+.dropdown {
+    position: absolute;
+    right: 10px;
+    top: 40px;
+    background: rgba(0,0,0,0.95);
+    border-radius: 8px;
+    display: none;
+    flex-direction: column;
+    z-index: 100;
+}
+
+.dropdown button {
+    background: none;
+    border: none;
+    color: white;
+    padding: 8px;
     text-align: left;
-    padding: 15px;
-    background: rgba(0,0,0,0.35);
+}
+
+/* VIEW CARD */
+#viewBox {
+    margin-top: 12px;
+    padding: 10px;
+    border-radius: 10px;
+    background: rgba(255,255,255,0.08);
+    font-size: 14px;
+}
+
+/* DIVIDER */
+.divider {
+    width: 80%;
+    height: 1px;
+    background: rgba(255,255,255,0.3);
+    margin: 40px auto;
+}
+
+/* POSTS */
+#posts {
+    max-width: 650px;
+    margin: auto;
+    text-align: left;
+}
+
+.post {
+    background: rgba(255,255,255,0.08);
+    padding: 14px;
+    margin-top: 14px;
     border-radius: 12px;
 }
 
-.item, .post {
-    padding: 10px;
-    margin: 8px 0;
-    background: rgba(255,255,255,0.08);
-    border-radius: 10px;
+/* COMMENT SECTION */
+.commentSection {
+    margin-top: 10px;
+    padding-top: 10px;
+    border-top: 1px solid rgba(255,255,255,0.2);
 }
 
-.small {
-    font-size: 12px;
-    opacity: 0.85;
+.commentBox {
+    position: relative;
+    background: rgba(255,255,255,0.05);
+    padding: 6px;
+    border-radius: 6px;
+    margin-top: 5px;
+    font-size: 13px;
 }
+
+.deleteIcon {
+    position: absolute;
+    right: 5px;
+    top: 2px;
+    cursor: pointer;
+}
+
 </style>
 </head>
 
@@ -83,41 +176,39 @@ button {
 
     <div id="count">0 people</div>
 
-    <button onclick="createAccount()">Create Account</button>
     <button onclick="join()">Join</button>
-    <button onclick="adminLogin()">Admin Mode</button>
+    <button onclick="togglePanel()">People Who Care</button>
 </div>
 
-<!-- PEOPLE -->
-<div class="section">
-    <h2>People Who Care</h2>
-    <div id="people"></div>
+<!-- PANEL -->
+<div id="panel">
+    <h3>People Who Care</h3>
+    <div id="nameList"></div>
 </div>
+
+<div class="divider"></div>
 
 <!-- POSTS -->
-<div class="section">
+<div id="posts">
     <h2>Community Posts</h2>
 
     <input id="postInput" placeholder="Write something..."
         style="width:70%; padding:10px; border-radius:10px; border:none;">
-
     <button onclick="addPost()">Post</button>
 
-    <div id="posts"></div>
+    <div id="postList"></div>
 </div>
 
 <script>
-const PASSWORD = "care2026";
 
-let account = JSON.parse(localStorage.getItem("account") || "null");
-let users = JSON.parse(localStorage.getItem("users") || "[]");
+const PASSWORD = "Care2026";
+
+let data = JSON.parse(localStorage.getItem("data") || "[]");
 let posts = JSON.parse(localStorage.getItem("posts") || "[]");
 
-let isAdmin = false;
-
 /* SAVE */
-function saveUsers() {
-    localStorage.setItem("users", JSON.stringify(users));
+function save() {
+    localStorage.setItem("data", JSON.stringify(data));
 }
 
 function savePosts() {
@@ -125,117 +216,109 @@ function savePosts() {
     renderPosts();
 }
 
-/* ACCOUNT */
-function createAccount() {
-    if (account && !isAdmin) {
-        alert("You already have an account on this device.");
-        return;
-    }
-
-    let name = prompt("Create username:");
-    if (!name) return;
-
-    account = { name: name.trim() };
-    localStorage.setItem("account", JSON.stringify(account));
-
-    alert("Logged in as " + account.name);
-}
-
-/* ADMIN */
-function adminLogin() {
-    let p = prompt("Enter password:");
-    if (p === PASSWORD) {
-        isAdmin = true;
-        alert("Admin mode enabled");
-    }
-}
-
 /* JOIN */
 function join() {
-    if (!account && !isAdmin) {
-        alert("Create an account first.");
-        return;
-    }
+    let name = prompt("Enter your name:");
+    if (!name) return;
 
-    if (!isAdmin) {
-        if (users.some(u => u.name === account.name)) {
-            alert("You already joined.");
-            return;
-        }
-    }
+    let action = prompt("What will you do?");
+    data.push({ name: name.trim(), action: action || "" });
 
-    let action = prompt("What will you do to help?");
-
-    users.push({
-        name: account ? account.name : "Admin",
-        action: action || ""
-    });
-
-    saveUsers();
-    renderUsers();
+    save();
+    render();
 }
 
-/* USERS */
-function renderUsers() {
-    document.getElementById("count").innerText = users.length + " people";
+/* RENDER PEOPLE */
+function render() {
+    document.getElementById("count").innerText = data.length + " people";
 
-    const box = document.getElementById("people");
-    box.innerHTML = "";
+    const list = document.getElementById("nameList");
+    list.innerHTML = "";
 
-    users.forEach(u => {
+    data.forEach((p, i) => {
         const div = document.createElement("div");
-        div.className = "item";
+        div.className = "nameItem";
 
         div.innerHTML = `
-            <b>${u.name}</b><br>
-            <span class="small">${u.action || "No action provided"}</span>
+            <span>${p.name}</span>
+            <span class="menuBtn" onclick="toggleMenu(${i})">⋯</span>
+
+            <div class="dropdown" id="menu-${i}">
+                <button onclick="viewAction(${i})">View</button>
+                <button onclick="editPerson(${i})">Edit</button>
+                <button onclick="deletePerson(${i})">Delete</button>
+            </div>
         `;
 
-        box.appendChild(div);
+        list.appendChild(div);
     });
+}
+
+/* MENU */
+function toggleMenu(i) {
+    document.querySelectorAll(".dropdown").forEach(d => d.style.display = "none");
+    const menu = document.getElementById("menu-" + i);
+    menu.style.display = menu.style.display === "flex" ? "none" : "flex";
+}
+
+/* VIEW (FIXED + IMPROVED) */
+function viewAction(i) {
+    let box = document.getElementById("viewBox");
+    if (!box) {
+        box = document.createElement("div");
+        box.id = "viewBox";
+        document.getElementById("panel").appendChild(box);
+    }
+
+    box.innerHTML = `
+        <strong>${data[i].name}</strong><br>
+        ${data[i].action || "No action added"}
+    `;
+}
+
+/* EDIT */
+function editPerson(i) {
+    if (prompt("Password:") !== PASSWORD) return alert("Wrong password");
+
+    let name = prompt("Edit name:", data[i].name);
+    let action = prompt("Edit action:", data[i].action);
+
+    if (name) data[i].name = name;
+    data[i].action = action || "";
+
+    save();
+    render();
+}
+
+/* DELETE */
+function deletePerson(i) {
+    if (prompt("Password:") !== PASSWORD) return alert("Wrong password");
+
+    data.splice(i, 1);
+    save();
+    render();
 }
 
 /* POSTS */
 function addPost() {
-    if (!account && !isAdmin) {
-        alert("Create account first");
-        return;
-    }
-
-    let text = document.getElementById("postInput").value;
-    if (!text.trim()) return;
+    let input = document.getElementById("postInput");
+    if (!input.value.trim()) return;
 
     posts.push({
-        user: account ? account.name : "Admin",
-        text: text.trim(),
+        text: input.value,
         likes: 0,
-        likedBy: [],
+        liked: false,
         comments: []
     });
 
-    document.getElementById("postInput").value = "";
+    input.value = "";
     savePosts();
 }
 
-/* LIKE / UNLIKE */
+/* LIKE */
 function likePost(i) {
-    if (!account || !account.name) {
-        alert("Create account first.");
-        return;
-    }
-
-    let p = posts[i];
-    let user = account.name;
-
-    if (!p.likedBy) p.likedBy = [];
-
-    if (p.likedBy.includes(user)) {
-        p.likedBy = p.likedBy.filter(x => x !== user);
-    } else {
-        p.likedBy.push(user);
-    }
-
-    p.likes = p.likedBy.length;
+    posts[i].liked = !posts[i].liked;
+    posts[i].likes += posts[i].liked ? 1 : -1;
     savePosts();
 }
 
@@ -244,47 +327,21 @@ function commentPost(i) {
     let c = prompt("Comment:");
     if (!c) return;
 
-    posts[i].comments.push({
-        user: account ? account.name : "Anonymous",
-        text: c,
-        createdAt: Date.now()
-    });
-
+    posts[i].comments.push(c);
     savePosts();
 }
 
 /* DELETE COMMENT */
-function deleteComment(postIndex, commentIndex) {
-    let comment = posts[postIndex].comments[commentIndex];
-    if (!comment) return;
+function deleteComment(pi, ci) {
+    if (prompt("Password:") !== PASSWORD) return alert("Wrong password");
 
-    let isOwner = account && comment.user === account.name;
-    let isAdminUser = isAdmin;
-    let within5s = Date.now() - comment.createdAt <= 5000;
-
-    if (!isAdminUser && !(isOwner && within5s)) {
-        alert("You can only delete your own comment within 5 seconds.");
-        return;
-    }
-
-    posts[postIndex].comments.splice(commentIndex, 1);
-    savePosts();
-}
-
-/* DELETE POST (NEW FIX) */
-function deletePost(i) {
-    if (prompt("Enter password:") !== PASSWORD) {
-        alert("Wrong password");
-        return;
-    }
-
-    posts.splice(i, 1);
+    posts[pi].comments.splice(ci, 1);
     savePosts();
 }
 
 /* RENDER POSTS */
 function renderPosts() {
-    const box = document.getElementById("posts");
+    const box = document.getElementById("postList");
     box.innerHTML = "";
 
     posts.forEach((p, i) => {
@@ -292,21 +349,21 @@ function renderPosts() {
         div.className = "post";
 
         div.innerHTML = `
-            <b>${p.user}</b><br>
-            ${p.text}<br><br>
+            <div>${p.text}</div>
 
-            ❤️ ${p.likes}
-            <button onclick="likePost(${i})">
-                ${account && p.likedBy.includes(account.name) ? "Unlike" : "Like"}
-            </button>
-            <button onclick="commentPost(${i})">Comment</button>
-            <button onclick="deletePost(${i})">Delete</button>
+            <div>
+                ❤️ ${p.likes}
+                <button onclick="likePost(${i})">
+                    ${p.liked ? "Unlike" : "Like"}
+                </button>
+                <button onclick="commentPost(${i})">Comment</button>
+            </div>
 
-            <div class="small">
+            <div class="commentSection">
                 ${p.comments.map((c, ci) => `
-                    <div>
-                        <b>${c.user}:</b> ${c.text}
-                        <button onclick="deleteComment(${i}, ${ci})">delete</button>
+                    <div class="commentBox">
+                        💬 ${c}
+                        <span class="deleteIcon" onclick="deleteComment(${i}, ${ci})">🗑</span>
                     </div>
                 `).join("")}
             </div>
@@ -316,9 +373,15 @@ function renderPosts() {
     });
 }
 
+/* PANEL */
+function togglePanel() {
+    document.getElementById("panel").classList.toggle("active");
+}
+
 /* INIT */
-renderUsers();
+render();
 renderPosts();
+
 </script>
 
 </body>
