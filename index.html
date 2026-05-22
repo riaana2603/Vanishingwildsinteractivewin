@@ -9,60 +9,39 @@ body {
     font-family: Arial;
     background: #111;
     color: white;
-    margin: 0;
     padding: 20px;
 }
 
-/* BUTTONS */
+/* Buttons */
 button {
     margin: 5px;
-    padding: 8px 12px;
+    padding: 6px 10px;
     cursor: pointer;
 }
 
-/* POSTS */
+/* Post */
 .post {
     background: rgba(255,255,255,0.05);
-    padding: 15px;
-    margin: 15px 0;
+    padding: 12px;
+    margin: 12px 0;
     border-radius: 10px;
     position: relative;
 }
 
-/* COMMENTS BOX */
+/* Comments (subtle, not a redesign) */
 .commentsBox {
-    margin-top: 10px;
-    padding: 10px;
-    background: rgba(255,255,255,0.08);
-    border-radius: 10px;
-}
-
-/* DROPDOWN FIX */
-.dropdown {
-    position: absolute;
-    right: 10px;
-    top: 100%;
-    margin-top: 5px;
-    background: black;
-    border-radius: 8px;
-    display: none;
-    flex-direction: column;
-    z-index: 9999;
-}
-
-.dropdown button {
-    background: none;
-    color: white;
-    border: none;
+    margin-top: 8px;
     padding: 8px;
+    background: rgba(255,255,255,0.06);
+    border-radius: 8px;
 }
 
-/* PEOPLE SECTION */
+/* People section */
 .peopleBox {
     margin-top: 20px;
-    padding: 15px;
-    background: rgba(255,255,255,0.06);
-    border-radius: 12px;
+    padding: 12px;
+    background: rgba(255,255,255,0.05);
+    border-radius: 10px;
 }
 </style>
 </head>
@@ -72,7 +51,7 @@ button {
 <h2>You Chose to Care</h2>
 
 <button onclick="createAccount()">Create Account</button>
-<button onclick="toggleAdmin()">Toggle Admin</button>
+<button onclick="toggleAdmin()">Admin Mode</button>
 <button onclick="joinPeople()">Join People Who Care</button>
 <button onclick="addPost()">Add Post</button>
 
@@ -86,11 +65,11 @@ button {
 <script>
 const PASSWORD = "Care2026";
 
-/* USER SYSTEM */
+/* USER */
 let currentUser = localStorage.getItem("currentUser") || null;
 let isAdmin = localStorage.getItem("isAdmin") === "true";
 
-/* DATA */
+/* DATA (SAFE LOAD) */
 let posts = JSON.parse(localStorage.getItem("posts")) || [];
 let comments = JSON.parse(localStorage.getItem("comments")) || {};
 let people = JSON.parse(localStorage.getItem("people")) || [];
@@ -99,25 +78,22 @@ let people = JSON.parse(localStorage.getItem("people")) || [];
 function createAccount() {
     let name = prompt("Enter your name:");
     if (!name) return;
-
     currentUser = name;
     localStorage.setItem("currentUser", name);
-    alert("Account created!");
 }
 
+/* ADMIN */
 function toggleAdmin() {
     if (!isAdmin) {
-        if (prompt("Enter admin password:") === PASSWORD) {
+        if (prompt("Password:") === PASSWORD) {
             isAdmin = true;
             localStorage.setItem("isAdmin", "true");
-            alert("Admin mode ON");
-        } else {
-            alert("Wrong password");
+            alert("Admin ON");
         }
     } else {
         isAdmin = false;
         localStorage.setItem("isAdmin", "false");
-        alert("Admin mode OFF");
+        alert("Admin OFF");
     }
 }
 
@@ -140,8 +116,8 @@ function joinPeople() {
         people.push({ name: currentUser, action });
 
     } else {
-        let name = prompt("Enter name:");
-        let action = prompt("Enter action:");
+        let name = prompt("Name:");
+        let action = prompt("Action:");
         if (!name || !action) return;
 
         people.push({ name, action });
@@ -163,18 +139,19 @@ function addPost() {
     }
 
     let title = prompt("Title (optional):") || "";
-    let body = prompt("Write your post:");
+    let text = prompt("Write your post:");
     let image = prompt("Image URL (optional):") || "";
 
-    if (!body) return;
+    if (!text) return;
 
     let author = isAdmin
-        ? (confirm("Post as admin?") ? "ADMIN" : prompt("Enter name:"))
+        ? (confirm("Post as admin?") ? "ADMIN" : prompt("Name:"))
         : currentUser;
 
     posts.unshift({
         title,
-        body,
+        text,   // OLD FORMAT
+        body: text, // NEW FORMAT (compatibility)
         image,
         author,
         likes: 0,
@@ -191,8 +168,8 @@ function savePosts() {
 
 /* REACTIONS */
 function react(i, type) {
-    if (type === "like") posts[i].likes++;
-    if (type === "dislike") posts[i].dislikes++;
+    if (type === "like") posts[i].likes = (posts[i].likes || 0) + 1;
+    if (type === "dislike") posts[i].dislikes = (posts[i].dislikes || 0) + 1;
     savePosts();
 }
 
@@ -203,17 +180,16 @@ function addComment(i) {
         return;
     }
 
-    let text = prompt("Write comment:");
+    let text = prompt("Comment:");
     if (!text) return;
 
     let author = isAdmin
-        ? (confirm("Comment as admin?") ? "ADMIN" : prompt("Enter name:"))
+        ? (confirm("Admin comment?") ? "ADMIN" : prompt("Name:"))
         : currentUser;
 
     if (!comments[i]) comments[i] = [];
 
     comments[i].push({ text, author });
-
     saveComments();
 }
 
@@ -235,24 +211,28 @@ function renderPosts() {
     container.innerHTML = "";
 
     posts.forEach((p, i) => {
+
+        let text = p.body || p.text || ""; // 🔥 DATA FIX
+
         let div = document.createElement("div");
         div.className = "post";
 
         div.innerHTML = `
             <div style="display:flex; justify-content:space-between;">
-                <strong>${p.author === "ADMIN" ? "👑 ADMIN" : p.author}</strong>
+                <b>${p.author === "ADMIN" ? "👑 ADMIN" : p.author || "Unknown"}</b>
                 ${isAdmin ? `<span onclick="deletePost(${i})">🗑</span>` : ""}
             </div>
 
             ${p.title ? `<h3>${p.title}</h3>` : ""}
-            <p>${p.body}</p>
+            <div>${text}</div>
+
             ${p.image ? `<img src="${p.image}" style="max-width:100%">` : ""}
 
             <div>
-                👍 ${p.likes}
+                👍 ${p.likes || 0}
                 <button onclick="react(${i}, 'like')">Like</button>
 
-                👎 ${p.dislikes}
+                👎 ${p.dislikes || 0}
                 <button onclick="react(${i}, 'dislike')">Dislike</button>
             </div>
 
