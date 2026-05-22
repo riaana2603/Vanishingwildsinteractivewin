@@ -5,45 +5,48 @@
 <title>You Chose to Care</title>
 
 <style>
+
+/* ===== GLOBAL ===== */
 body {
     margin: 0;
-    font-family: Arial;
+    font-family: 'Segoe UI', system-ui, sans-serif;
     color: white;
 }
 
-/* HERO */
+/* ===== HERO ===== */
 .hero {
     height: 100vh;
     background: url('https://images.unsplash.com/photo-1501785888041-af3ef285b470') center/cover no-repeat;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: flex-start;
     text-align: center;
     padding-top: 80px;
 }
 
-/* TEXT */
+/* ===== TEXT ===== */
 .hero h1 {
-    font-size: 48px;
+    font-size: 52px;
+    margin-bottom: 10px;
 }
 
 .hero p {
     max-width: 600px;
+    margin: auto;
+    font-size: 16px;
+    color: rgba(255,255,255,0.9);
+    text-shadow: 0 2px 8px rgba(0,0,0,0.6);
 }
 
-/* GLASS UI */
+/* ===== GLASS ===== */
 .glass {
-    background: rgba(255,255,255,0.15);
-    backdrop-filter: blur(12px);
-    padding: 15px;
-    border-radius: 16px;
-    margin-top: 20px;
+    background: rgba(255,255,255,0.18);
+    backdrop-filter: blur(14px);
+    padding: 16px;
+    border-radius: 18px;
+    margin: 20px auto;
     width: 90%;
-    max-width: 600px;
+    max-width: 650px;
 }
 
-/* INPUT AREA */
+/* ===== INPUT ===== */
 .inputRow {
     display: flex;
     gap: 10px;
@@ -51,43 +54,54 @@ body {
 
 input {
     flex: 1;
-    padding: 10px;
-    border-radius: 20px;
+    padding: 12px;
+    border-radius: 25px;
     border: none;
 }
 
-/* BUTTONS */
+/* ===== BUTTON ===== */
 button {
+    background: rgba(255,255,255,0.8);
+    color: black;
+    border: none;
     padding: 8px 14px;
     border-radius: 20px;
-    border: none;
     cursor: pointer;
+    transition: 0.2s;
 }
 
-/* POST */
+button:hover {
+    background: white;
+}
+
+/* ===== POSTS ===== */
 .post {
     text-align: left;
-    margin-top: 15px;
 }
 
 .post img {
     width: 100%;
-    border-radius: 10px;
+    border-radius: 12px;
     margin-top: 10px;
 }
 
-/* COMMENTS */
+/* ===== COMMENTS ===== */
 .commentsBox {
-    margin-top: 10px;
+    margin-top: 12px;
     padding: 10px;
-    border-radius: 10px;
-    background: rgba(255,255,255,0.2);
+    border-radius: 12px;
+    background: rgba(0,0,0,0.25);
 }
 
-/* PEOPLE */
+/* ===== PEOPLE ===== */
 .peopleSection {
-    margin-top: 30px;
+    margin-top: 40px;
 }
+
+.peopleSection h2 {
+    margin-bottom: 10px;
+}
+
 </style>
 </head>
 
@@ -98,7 +112,7 @@ button {
 <h1>You Chose to Care</h1>
 <p>Wildfires are destroying habitats. A few people choose to act instead of scroll.</p>
 
-<!-- CONTROL PANEL -->
+<!-- CONTROLS -->
 <div class="glass">
     <button onclick="createAccount()">Create Account</button>
     <button onclick="toggleAdmin()">Admin Mode</button>
@@ -126,233 +140,193 @@ button {
 
 <script>
 
-/* =========================
-   STATE MANAGEMENT
-========================= */
-
+/* ===== STATE ===== */
 let posts = JSON.parse(localStorage.getItem("posts")) || [];
 let people = JSON.parse(localStorage.getItem("people")) || [];
 
 let currentUser = localStorage.getItem("user") || null;
 let isAdmin = false;
 
-/* =========================
-   ACCOUNT SYSTEM
-========================= */
+/* ===== DATA RECOVERY (IMPORTANT) ===== */
+posts = posts.map(p => {
+    return {
+        title: p.title || "",
+        body: p.body || p.text || "",
+        image: p.image || "",
+        author: p.author || "Unknown",
+        likes: p.likes || 0,
+        dislikes: p.dislikes || 0,
+        comments: p.comments || []
+    };
+});
 
+/* ===== ACCOUNT ===== */
 function createAccount() {
     const name = prompt("Enter your name:");
     if (!name) return;
-
     currentUser = name;
     localStorage.setItem("user", name);
 }
 
-/* =========================
-   ADMIN SYSTEM
-========================= */
-
+/* ===== ADMIN ===== */
 function toggleAdmin() {
     if (!isAdmin) {
-        const password = prompt("Enter admin password:");
-        if (password === "admin123") {
+        const pass = prompt("Password:");
+        if (pass === "admin123") {
             isAdmin = true;
-            alert("Admin mode enabled");
+            alert("Admin ON");
         }
     } else {
         isAdmin = false;
-        alert("Admin mode disabled");
+        alert("Admin OFF");
     }
 }
 
-/* =========================
-   POST CREATION
-========================= */
-
+/* ===== ADD POST ===== */
 function addPost() {
 
     if (!currentUser && !isAdmin) {
-        alert("Create an account first.");
+        alert("Create account first");
         return;
     }
 
-    const input = document.getElementById("postInput");
-    const bodyText = input.value.trim();
+    const body = document.getElementById("postInput").value.trim();
+    if (!body) return;
 
-    if (!bodyText) return;
-
-    const title = prompt("Enter title (optional):");
-    const image = prompt("Enter image URL (optional):");
+    const title = prompt("Title (optional):");
+    const image = prompt("Image URL (optional):");
 
     const author = isAdmin
-        ? (prompt("Enter admin display name or leave blank") || "ADMIN")
+        ? (prompt("Admin name or blank") || "ADMIN")
         : currentUser;
 
-    const newPost = {
+    posts.unshift({
         title: title || "",
-        body: bodyText,
-        text: bodyText, // backward compatibility
+        body: body,
         image: image || "",
         author: author,
         likes: 0,
         dislikes: 0,
         comments: []
-    };
+    });
 
-    posts.unshift(newPost);
-
-    input.value = "";
-    saveData();
+    document.getElementById("postInput").value = "";
+    save();
 }
 
-/* =========================
-   POST RENDERING
-========================= */
-
+/* ===== RENDER POSTS ===== */
 function renderPosts() {
 
     const container = document.getElementById("posts");
     container.innerHTML = "";
 
-    posts.forEach((post, index) => {
+    posts.forEach((p, i) => {
 
-        const contentText = post.body || post.text || "";
+        const el = document.createElement("div");
+        el.className = "glass post";
 
-        const postElement = document.createElement("div");
-        postElement.className = "glass post";
-
-        postElement.innerHTML = `
-            ${post.title ? `<h3>${post.title}</h3>` : ""}
-            <p>${contentText}</p>
-            ${post.image ? `<img src="${post.image}">` : ""}
+        el.innerHTML = `
+            ${p.title ? `<h3>${p.title}</h3>` : ""}
+            <p>${p.body}</p>
+            ${p.image ? `<img src="${p.image}">` : ""}
 
             <div>
-                ❤️ ${post.likes || 0}
-                <button onclick="likePost(${index})">Like</button>
+                👍 ${p.likes}
+                <button onclick="like(${i})">+</button>
 
-                👎 ${post.dislikes || 0}
-                <button onclick="dislikePost(${index})">Dislike</button>
+                👎 ${p.dislikes}
+                <button onclick="dislike(${i})">-</button>
             </div>
 
-            <button onclick="addComment(${index})">Comment</button>
+            <button onclick="comment(${i})">Comment</button>
 
             <div class="commentsBox">
-                ${(post.comments || []).map(c =>
+                ${p.comments.map(c =>
                     `<div><b>${c.user}:</b> ${c.text}</div>`
                 ).join("")}
             </div>
 
-            ${isAdmin ? `<button onclick="deletePost(${index})">Delete</button>` : ""}
+            ${isAdmin ? `<button onclick="del(${i})">Delete</button>` : ""}
         `;
 
-        container.appendChild(postElement);
+        container.appendChild(el);
     });
 }
 
-/* =========================
-   POST INTERACTIONS
-========================= */
+/* ===== INTERACTIONS ===== */
+function like(i){ posts[i].likes++; save(); }
+function dislike(i){ posts[i].dislikes++; save(); }
+function del(i){ posts.splice(i,1); save(); }
 
-function likePost(index) {
-    posts[index].likes = (posts[index].likes || 0) + 1;
-    saveData();
-}
-
-function dislikePost(index) {
-    posts[index].dislikes = (posts[index].dislikes || 0) + 1;
-    saveData();
-}
-
-function deletePost(index) {
-    posts.splice(index, 1);
-    saveData();
-}
-
-/* =========================
-   COMMENTS
-========================= */
-
-function addComment(index) {
+/* ===== COMMENTS ===== */
+function comment(i){
 
     if (!currentUser && !isAdmin) {
-        alert("Create account first.");
+        alert("Login first");
         return;
     }
 
-    const text = prompt("Enter your comment:");
+    const text = prompt("Comment:");
     if (!text) return;
 
     const user = isAdmin
-        ? (prompt("Admin display name or blank") || "ADMIN")
+        ? (prompt("Admin name") || "ADMIN")
         : currentUser;
 
-    posts[index].comments.push({ user, text });
-
-    saveData();
+    posts[i].comments.push({user, text});
+    save();
 }
 
-/* =========================
-   PEOPLE SYSTEM
-========================= */
+/* ===== PEOPLE ===== */
+function joinPeople(){
 
-function joinPeople() {
+    let name, action;
 
-    let name;
-    let action;
-
-    if (isAdmin) {
-        name = prompt("Enter person's name:");
-        action = prompt("Enter their action:");
+    if (isAdmin){
+        name = prompt("Name:");
+        action = prompt("Action:");
     } else {
-        if (!currentUser) {
-            alert("Create account first.");
+        if (!currentUser){
+            alert("Create account first");
+            return;
+        }
+
+        if (people.some(p => p.name === currentUser)){
+            alert("Already joined");
             return;
         }
 
         name = currentUser;
-
-        const alreadyJoined = people.some(p => p.name === name);
-        if (alreadyJoined) {
-            alert("You already joined.");
-            return;
-        }
-
         action = prompt("What did you do?");
     }
 
     if (!name || !action) return;
 
-    people.push({ name, action });
-    saveData();
+    people.push({name, action});
+    save();
 }
 
-function renderPeople() {
+/* ===== RENDER PEOPLE ===== */
+function renderPeople(){
+    const box = document.getElementById("people");
+    box.innerHTML = "";
 
-    const container = document.getElementById("people");
-    container.innerHTML = "";
-
-    people.forEach(person => {
+    people.forEach(p=>{
         const div = document.createElement("div");
-        div.innerHTML = `<b>${person.name}</b>: ${person.action}`;
-        container.appendChild(div);
+        div.innerHTML = `<b>${p.name}</b>: ${p.action}`;
+        box.appendChild(div);
     });
 }
 
-/* =========================
-   STORAGE
-========================= */
-
-function saveData() {
+/* ===== SAVE ===== */
+function save(){
     localStorage.setItem("posts", JSON.stringify(posts));
     localStorage.setItem("people", JSON.stringify(people));
     renderPosts();
     renderPeople();
 }
 
-/* =========================
-   INIT
-========================= */
-
+/* ===== INIT ===== */
 renderPosts();
 renderPeople();
 
