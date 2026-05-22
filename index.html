@@ -11,52 +11,62 @@ body {
     color: white;
 }
 
-/* HERO SECTION */
+/* HERO */
 .hero {
     height: 100vh;
     background: url('https://images.unsplash.com/photo-1501785888041-af3ef285b470') center/cover no-repeat;
     display: flex;
     flex-direction: column;
     align-items: center;
-    justify-content: center;
+    justify-content: flex-start;
     text-align: center;
+    padding-top: 80px;
 }
 
+/* TEXT */
 .hero h1 {
-    font-size: 50px;
+    font-size: 48px;
 }
 
 .hero p {
     max-width: 600px;
 }
 
-/* GLASS EFFECT */
+/* GLASS UI */
 .glass {
     background: rgba(255,255,255,0.15);
-    backdrop-filter: blur(10px);
+    backdrop-filter: blur(12px);
     padding: 15px;
-    border-radius: 15px;
+    border-radius: 16px;
     margin-top: 20px;
+    width: 90%;
+    max-width: 600px;
 }
 
-/* INPUT */
+/* INPUT AREA */
+.inputRow {
+    display: flex;
+    gap: 10px;
+}
+
 input {
+    flex: 1;
     padding: 10px;
     border-radius: 20px;
     border: none;
-    width: 250px;
 }
 
+/* BUTTONS */
 button {
-    padding: 8px 15px;
+    padding: 8px 14px;
     border-radius: 20px;
     border: none;
     cursor: pointer;
-    margin-left: 5px;
 }
 
-/* POSTS */
+/* POST */
 .post {
+    text-align: left;
     margin-top: 15px;
 }
 
@@ -69,14 +79,14 @@ button {
 /* COMMENTS */
 .commentsBox {
     margin-top: 10px;
-    background: rgba(255,255,255,0.2);
     padding: 10px;
     border-radius: 10px;
+    background: rgba(255,255,255,0.2);
 }
 
 /* PEOPLE */
 .peopleSection {
-    margin-top: 40px;
+    margin-top: 30px;
 }
 </style>
 </head>
@@ -84,199 +94,265 @@ button {
 <body>
 
 <div class="hero">
-    <h1>You Chose to Care</h1>
-    <p>Wildfires are destroying habitats. A few people choose to act instead of scroll.</p>
 
-    <div class="glass">
-        <button onclick="createAccount()">Create Account</button>
-        <button onclick="toggleAdmin()">Admin</button>
-        <button onclick="joinPeople()">Join</button>
-    </div>
+<h1>You Chose to Care</h1>
+<p>Wildfires are destroying habitats. A few people choose to act instead of scroll.</p>
 
-    <div class="glass">
+<!-- CONTROL PANEL -->
+<div class="glass">
+    <button onclick="createAccount()">Create Account</button>
+    <button onclick="toggleAdmin()">Admin Mode</button>
+    <button onclick="joinPeople()">Join</button>
+</div>
+
+<!-- POST INPUT -->
+<div class="glass">
+    <div class="inputRow">
         <input id="postInput" placeholder="Write something...">
         <button onclick="addPost()">Post</button>
     </div>
+</div>
 
-    <div id="posts"></div>
+<!-- POSTS -->
+<div id="posts"></div>
 
-    <div class="glass peopleSection">
-        <h2>People Who Care</h2>
-        <div id="people"></div>
-    </div>
+<!-- PEOPLE -->
+<div class="glass peopleSection">
+    <h2>People Who Care</h2>
+    <div id="people"></div>
+</div>
+
 </div>
 
 <script>
 
-/* -------- DATA -------- */
+/* =========================
+   STATE MANAGEMENT
+========================= */
+
 let posts = JSON.parse(localStorage.getItem("posts")) || [];
 let people = JSON.parse(localStorage.getItem("people")) || [];
 
 let currentUser = localStorage.getItem("user") || null;
 let isAdmin = false;
 
-/* -------- ACCOUNT -------- */
+/* =========================
+   ACCOUNT SYSTEM
+========================= */
+
 function createAccount() {
-    let name = prompt("Enter your name");
+    const name = prompt("Enter your name:");
     if (!name) return;
+
     currentUser = name;
     localStorage.setItem("user", name);
 }
 
-/* -------- ADMIN -------- */
+/* =========================
+   ADMIN SYSTEM
+========================= */
+
 function toggleAdmin() {
     if (!isAdmin) {
-        let pass = prompt("Password?");
-        if (pass === "admin123") {
+        const password = prompt("Enter admin password:");
+        if (password === "admin123") {
             isAdmin = true;
-            alert("Admin ON");
+            alert("Admin mode enabled");
         }
     } else {
         isAdmin = false;
-        alert("Admin OFF");
+        alert("Admin mode disabled");
     }
 }
 
-/* -------- POST -------- */
+/* =========================
+   POST CREATION
+========================= */
+
 function addPost() {
-    let input = document.getElementById("postInput");
-    let body = input.value;
-    if (!body) return;
 
-    let title = prompt("Title (optional)");
-    let image = prompt("Image URL (optional)");
+    if (!currentUser && !isAdmin) {
+        alert("Create an account first.");
+        return;
+    }
 
-    let author = isAdmin
-        ? (prompt("Admin name or blank") || "ADMIN")
+    const input = document.getElementById("postInput");
+    const bodyText = input.value.trim();
+
+    if (!bodyText) return;
+
+    const title = prompt("Enter title (optional):");
+    const image = prompt("Enter image URL (optional):");
+
+    const author = isAdmin
+        ? (prompt("Enter admin display name or leave blank") || "ADMIN")
         : currentUser;
 
-    posts.unshift({
-        title,
-        body,
-        text: body,
-        image,
-        author,
+    const newPost = {
+        title: title || "",
+        body: bodyText,
+        text: bodyText, // backward compatibility
+        image: image || "",
+        author: author,
         likes: 0,
         dislikes: 0,
         comments: []
-    });
+    };
+
+    posts.unshift(newPost);
 
     input.value = "";
-    save();
+    saveData();
 }
 
-/* -------- RENDER POSTS -------- */
+/* =========================
+   POST RENDERING
+========================= */
+
 function renderPosts() {
-    let container = document.getElementById("posts");
+
+    const container = document.getElementById("posts");
     container.innerHTML = "";
 
-    posts.forEach((p, i) => {
+    posts.forEach((post, index) => {
 
-        let text = p.body || p.text || "";
+        const contentText = post.body || post.text || "";
 
-        let div = document.createElement("div");
-        div.className = "glass post";
+        const postElement = document.createElement("div");
+        postElement.className = "glass post";
 
-        div.innerHTML = `
-            ${p.title ? `<h3>${p.title}</h3>` : ""}
-            <div>${text}</div>
-            ${p.image ? `<img src="${p.image}">` : ""}
+        postElement.innerHTML = `
+            ${post.title ? `<h3>${post.title}</h3>` : ""}
+            <p>${contentText}</p>
+            ${post.image ? `<img src="${post.image}">` : ""}
 
-            <div style="margin-top:10px;">
-                ❤️ ${p.likes || 0}
-                <button onclick="like(${i})">Like</button>
+            <div>
+                ❤️ ${post.likes || 0}
+                <button onclick="likePost(${index})">Like</button>
 
-                👎 ${p.dislikes || 0}
-                <button onclick="dislike(${i})">Dislike</button>
+                👎 ${post.dislikes || 0}
+                <button onclick="dislikePost(${index})">Dislike</button>
             </div>
 
-            <button onclick="addComment(${i})">Comment</button>
+            <button onclick="addComment(${index})">Comment</button>
 
             <div class="commentsBox">
-                ${(p.comments || []).map(c =>
+                ${(post.comments || []).map(c =>
                     `<div><b>${c.user}:</b> ${c.text}</div>`
                 ).join("")}
             </div>
 
-            ${isAdmin ? `<button onclick="deletePost(${i})">Delete</button>` : ""}
+            ${isAdmin ? `<button onclick="deletePost(${index})">Delete</button>` : ""}
         `;
 
-        container.appendChild(div);
+        container.appendChild(postElement);
     });
 }
 
-/* -------- REACTIONS -------- */
-function like(i) {
-    posts[i].likes++;
-    save();
+/* =========================
+   POST INTERACTIONS
+========================= */
+
+function likePost(index) {
+    posts[index].likes = (posts[index].likes || 0) + 1;
+    saveData();
 }
 
-function dislike(i) {
-    posts[i].dislikes++;
-    save();
+function dislikePost(index) {
+    posts[index].dislikes = (posts[index].dislikes || 0) + 1;
+    saveData();
 }
 
-/* -------- COMMENTS -------- */
-function addComment(i) {
-    let text = prompt("Comment");
+function deletePost(index) {
+    posts.splice(index, 1);
+    saveData();
+}
+
+/* =========================
+   COMMENTS
+========================= */
+
+function addComment(index) {
+
+    if (!currentUser && !isAdmin) {
+        alert("Create account first.");
+        return;
+    }
+
+    const text = prompt("Enter your comment:");
     if (!text) return;
 
-    let user = isAdmin
-        ? (prompt("Admin name or blank") || "ADMIN")
+    const user = isAdmin
+        ? (prompt("Admin display name or blank") || "ADMIN")
         : currentUser;
 
-    posts[i].comments.push({ user, text });
-    save();
+    posts[index].comments.push({ user, text });
+
+    saveData();
 }
 
-/* -------- PEOPLE -------- */
+/* =========================
+   PEOPLE SYSTEM
+========================= */
+
 function joinPeople() {
 
-    let name, action;
+    let name;
+    let action;
 
     if (isAdmin) {
-        name = prompt("Name");
-        action = prompt("Action");
+        name = prompt("Enter person's name:");
+        action = prompt("Enter their action:");
     } else {
-        name = currentUser;
-
-        if (!name) {
-            alert("Create account first");
+        if (!currentUser) {
+            alert("Create account first.");
             return;
         }
 
-        if (people.some(p => p.name === name)) {
-            alert("Already joined");
+        name = currentUser;
+
+        const alreadyJoined = people.some(p => p.name === name);
+        if (alreadyJoined) {
+            alert("You already joined.");
             return;
         }
 
         action = prompt("What did you do?");
     }
 
+    if (!name || !action) return;
+
     people.push({ name, action });
-    save();
+    saveData();
 }
 
 function renderPeople() {
-    let container = document.getElementById("people");
+
+    const container = document.getElementById("people");
     container.innerHTML = "";
 
-    people.forEach(p => {
-        let div = document.createElement("div");
-        div.innerHTML = `<b>${p.name}</b>: ${p.action}`;
+    people.forEach(person => {
+        const div = document.createElement("div");
+        div.innerHTML = `<b>${person.name}</b>: ${person.action}`;
         container.appendChild(div);
     });
 }
 
-/* -------- SAVE -------- */
-function save() {
+/* =========================
+   STORAGE
+========================= */
+
+function saveData() {
     localStorage.setItem("posts", JSON.stringify(posts));
     localStorage.setItem("people", JSON.stringify(people));
     renderPosts();
     renderPeople();
 }
 
-/* -------- INIT -------- */
+/* =========================
+   INIT
+========================= */
+
 renderPosts();
 renderPeople();
 
