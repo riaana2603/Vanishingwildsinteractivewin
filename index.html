@@ -6,94 +6,116 @@
 
 <style>
 body {
+    margin: 0;
     font-family: Arial;
-    background: #0b0b0b;
     color: white;
-    padding: 20px;
 }
 
-h1 {
-    margin-bottom: 10px;
+/* HERO SECTION */
+.hero {
+    height: 100vh;
+    background: url('https://images.unsplash.com/photo-1501785888041-af3ef285b470') center/cover no-repeat;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
 }
 
-/* Top bar (kept simple) */
-.topBar button {
-    margin-right: 10px;
-    padding: 6px 12px;
+.hero h1 {
+    font-size: 50px;
+}
+
+.hero p {
+    max-width: 600px;
+}
+
+/* GLASS EFFECT */
+.glass {
+    background: rgba(255,255,255,0.15);
+    backdrop-filter: blur(10px);
+    padding: 15px;
+    border-radius: 15px;
+    margin-top: 20px;
+}
+
+/* INPUT */
+input {
+    padding: 10px;
+    border-radius: 20px;
+    border: none;
+    width: 250px;
+}
+
+button {
+    padding: 8px 15px;
     border-radius: 20px;
     border: none;
     cursor: pointer;
+    margin-left: 5px;
 }
 
 /* POSTS */
 .post {
-    background: rgba(255,255,255,0.06);
-    padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 15px;
+    margin-top: 15px;
 }
 
 .post img {
-    max-width: 100%;
-    border-radius: 8px;
+    width: 100%;
+    border-radius: 10px;
     margin-top: 10px;
 }
 
 /* COMMENTS */
 .commentsBox {
     margin-top: 10px;
+    background: rgba(255,255,255,0.2);
     padding: 10px;
-    background: rgba(255,255,255,0.08);
     border-radius: 10px;
 }
 
-/* PEOPLE SECTION */
+/* PEOPLE */
 .peopleSection {
     margin-top: 40px;
-    padding: 15px;
-    background: rgba(255,255,255,0.05);
-    border-radius: 14px;
-}
-
-.peopleHeader {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 </style>
 </head>
 
 <body>
 
-<h1>You Chose to Care</h1>
+<div class="hero">
+    <h1>You Chose to Care</h1>
+    <p>Wildfires are destroying habitats. A few people choose to act instead of scroll.</p>
 
-<div class="topBar">
-    <button onclick="createAccount()">Create Account</button>
-    <button onclick="toggleAdmin()">Admin Mode</button>
-    <button onclick="addPost()">+ Post</button>
-</div>
-
-<!-- POSTS -->
-<div id="posts"></div>
-
-<!-- PEOPLE -->
-<div class="peopleSection">
-    <div class="peopleHeader">
-        <h2>People Who Care</h2>
+    <div class="glass">
+        <button onclick="createAccount()">Create Account</button>
+        <button onclick="toggleAdmin()">Admin</button>
         <button onclick="joinPeople()">Join</button>
     </div>
-    <div id="people"></div>
+
+    <div class="glass">
+        <input id="postInput" placeholder="Write something...">
+        <button onclick="addPost()">Post</button>
+    </div>
+
+    <div id="posts"></div>
+
+    <div class="glass peopleSection">
+        <h2>People Who Care</h2>
+        <div id="people"></div>
+    </div>
 </div>
 
 <script>
 
-/* ---------------- DATA ---------------- */
+/* -------- DATA -------- */
 let posts = JSON.parse(localStorage.getItem("posts")) || [];
 let people = JSON.parse(localStorage.getItem("people")) || [];
+
 let currentUser = localStorage.getItem("user") || null;
 let isAdmin = false;
 
-/* ---------------- ACCOUNT ---------------- */
+/* -------- ACCOUNT -------- */
 function createAccount() {
     let name = prompt("Enter your name");
     if (!name) return;
@@ -101,40 +123,37 @@ function createAccount() {
     localStorage.setItem("user", name);
 }
 
+/* -------- ADMIN -------- */
 function toggleAdmin() {
     if (!isAdmin) {
-        let pass = prompt("Enter admin password");
+        let pass = prompt("Password?");
         if (pass === "admin123") {
             isAdmin = true;
-            alert("Admin mode ON");
+            alert("Admin ON");
         }
     } else {
         isAdmin = false;
-        alert("Admin mode OFF");
+        alert("Admin OFF");
     }
 }
 
-/* ---------------- POSTS ---------------- */
+/* -------- POST -------- */
 function addPost() {
-    if (!currentUser && !isAdmin) {
-        alert("Create account first");
-        return;
-    }
-
-    let title = prompt("Title (optional)");
-    let body = prompt("Post text");
+    let input = document.getElementById("postInput");
+    let body = input.value;
     if (!body) return;
 
+    let title = prompt("Title (optional)");
     let image = prompt("Image URL (optional)");
 
     let author = isAdmin
-        ? (prompt("Admin name or leave blank for ADMIN") || "ADMIN")
+        ? (prompt("Admin name or blank") || "ADMIN")
         : currentUser;
 
     posts.unshift({
         title,
         body,
-        text: body, // compatibility
+        text: body,
         image,
         author,
         likes: 0,
@@ -142,9 +161,11 @@ function addPost() {
         comments: []
     });
 
+    input.value = "";
     save();
 }
 
+/* -------- RENDER POSTS -------- */
 function renderPosts() {
     let container = document.getElementById("posts");
     container.innerHTML = "";
@@ -154,7 +175,7 @@ function renderPosts() {
         let text = p.body || p.text || "";
 
         let div = document.createElement("div");
-        div.className = "post";
+        div.className = "glass post";
 
         div.innerHTML = `
             ${p.title ? `<h3>${p.title}</h3>` : ""}
@@ -162,19 +183,19 @@ function renderPosts() {
             ${p.image ? `<img src="${p.image}">` : ""}
 
             <div style="margin-top:10px;">
-                👍 ${p.likes || 0}
-                <button onclick="like(${i})">+</button>
+                ❤️ ${p.likes || 0}
+                <button onclick="like(${i})">Like</button>
 
                 👎 ${p.dislikes || 0}
-                <button onclick="dislike(${i})">-</button>
+                <button onclick="dislike(${i})">Dislike</button>
             </div>
 
-            <div style="margin-top:10px;">
-                <button onclick="addComment(${i})">Comment</button>
-            </div>
+            <button onclick="addComment(${i})">Comment</button>
 
             <div class="commentsBox">
-                ${(p.comments || []).map(c => `<div><b>${c.user}:</b> ${c.text}</div>`).join("")}
+                ${(p.comments || []).map(c =>
+                    `<div><b>${c.user}:</b> ${c.text}</div>`
+                ).join("")}
             </div>
 
             ${isAdmin ? `<button onclick="deletePost(${i})">Delete</button>` : ""}
@@ -184,28 +205,19 @@ function renderPosts() {
     });
 }
 
+/* -------- REACTIONS -------- */
 function like(i) {
-    posts[i].likes = (posts[i].likes || 0) + 1;
+    posts[i].likes++;
     save();
 }
 
 function dislike(i) {
-    posts[i].dislikes = (posts[i].dislikes || 0) + 1;
+    posts[i].dislikes++;
     save();
 }
 
-function deletePost(i) {
-    posts.splice(i, 1);
-    save();
-}
-
-/* ---------------- COMMENTS ---------------- */
+/* -------- COMMENTS -------- */
 function addComment(i) {
-    if (!currentUser && !isAdmin) {
-        alert("Create account first");
-        return;
-    }
-
     let text = prompt("Comment");
     if (!text) return;
 
@@ -217,24 +229,24 @@ function addComment(i) {
     save();
 }
 
-/* ---------------- PEOPLE ---------------- */
+/* -------- PEOPLE -------- */
 function joinPeople() {
-    if (!currentUser && !isAdmin) {
-        alert("Create account first");
-        return;
-    }
 
     let name, action;
 
     if (isAdmin) {
-        name = prompt("Person name");
-        action = prompt("Their action");
+        name = prompt("Name");
+        action = prompt("Action");
     } else {
         name = currentUser;
 
-        // prevent duplicate join
+        if (!name) {
+            alert("Create account first");
+            return;
+        }
+
         if (people.some(p => p.name === name)) {
-            alert("You already joined");
+            alert("Already joined");
             return;
         }
 
@@ -256,7 +268,7 @@ function renderPeople() {
     });
 }
 
-/* ---------------- SAVE ---------------- */
+/* -------- SAVE -------- */
 function save() {
     localStorage.setItem("posts", JSON.stringify(posts));
     localStorage.setItem("people", JSON.stringify(people));
@@ -264,7 +276,7 @@ function save() {
     renderPeople();
 }
 
-/* ---------------- INIT ---------------- */
+/* -------- INIT -------- */
 renderPosts();
 renderPeople();
 
