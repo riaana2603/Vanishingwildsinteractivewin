@@ -4,211 +4,184 @@
 <meta charset="UTF-8">
 <title>You Chose to Care</title>
 
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500&family=Inter:wght@300;400&display=swap" rel="stylesheet">
-
 <style>
-
 body {
-    margin: 0;
-    font-family: 'Inter', sans-serif;
+    font-family: Arial;
+    background: #111;
     color: white;
-    text-align: center;
-
-    background:
-        linear-gradient(rgba(0,0,0,0.45), rgba(0,0,0,0.75)),
-        url('https://images.unsplash.com/photo-1501785888041-af3ef285b470');
-
-    background-size: cover;
-    background-position: center;
-    background-attachment: fixed;
-}
-
-.container { margin-top: 120px; }
-
-h1 {
-    font-family: 'Playfair Display', serif;
-    font-size: 48px;
-}
-
-.info {
-    opacity: 0.85;
-    max-width: 500px;
-    margin: auto;
+    margin: 0;
+    padding: 20px;
 }
 
 /* BUTTONS */
 button {
-    margin: 10px;
-    padding: 12px 20px;
-    border-radius: 25px;
-    border: none;
-    background: rgba(255,255,255,0.2);
-    color: white;
+    margin: 5px;
+    padding: 8px 12px;
     cursor: pointer;
-    transition: 0.2s;
 }
 
-button:hover {
-    background: rgba(255,255,255,0.35);
-}
-
-/* PANEL */
-#panel {
-    position: fixed;
-    right: 0;
-    top: 0;
-    width: 320px;
-    height: 100%;
-    background: rgba(0,0,0,0.85);
-    backdrop-filter: blur(12px);
-    padding: 20px;
-    transform: translateX(100%);
-    transition: 0.3s;
-    display: flex;
-    flex-direction: column;
-}
-
-#panel.active { transform: translateX(0); }
-
-#nameList {
-    flex: 1;
-    overflow-y: auto;
-}
-
-/* NAME ITEM */
-.nameItem {
-    display: flex;
-    justify-content: space-between;
-    padding: 10px;
-    margin: 6px 0;
-    background: rgba(255,255,255,0.06);
-    border-radius: 8px;
+/* POSTS */
+.post {
+    background: rgba(255,255,255,0.05);
+    padding: 15px;
+    margin: 15px 0;
+    border-radius: 10px;
     position: relative;
 }
 
-/* MENU */
-.menuBtn { cursor: pointer; }
+/* COMMENTS BOX */
+.commentsBox {
+    margin-top: 10px;
+    padding: 10px;
+    background: rgba(255,255,255,0.08);
+    border-radius: 10px;
+}
 
+/* DROPDOWN FIX */
 .dropdown {
     position: absolute;
     right: 10px;
-    top: 40px;
-    background: rgba(0,0,0,0.95);
+    top: 100%;
+    margin-top: 5px;
+    background: black;
     border-radius: 8px;
     display: none;
     flex-direction: column;
-    z-index: 100;
+    z-index: 9999;
 }
 
 .dropdown button {
     background: none;
-    border: none;
     color: white;
+    border: none;
     padding: 8px;
-    text-align: left;
 }
 
-/* VIEW CARD */
-#viewBox {
-    margin-top: 12px;
-    padding: 10px;
-    border-radius: 10px;
-    background: rgba(255,255,255,0.08);
-    font-size: 14px;
-}
-
-/* DIVIDER */
-.divider {
-    width: 80%;
-    height: 1px;
-    background: rgba(255,255,255,0.3);
-    margin: 40px auto;
-}
-
-/* POSTS */
-#posts {
-    max-width: 650px;
-    margin: auto;
-    text-align: left;
-}
-
-.post {
-    background: rgba(255,255,255,0.08);
-    padding: 14px;
-    margin-top: 14px;
+/* PEOPLE SECTION */
+.peopleBox {
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(255,255,255,0.06);
     border-radius: 12px;
 }
-
-/* COMMENT SECTION */
-.commentSection {
-    margin-top: 10px;
-    padding-top: 10px;
-    border-top: 1px solid rgba(255,255,255,0.2);
-}
-
-.commentBox {
-    position: relative;
-    background: rgba(255,255,255,0.05);
-    padding: 6px;
-    border-radius: 6px;
-    margin-top: 5px;
-    font-size: 13px;
-}
-
-.deleteIcon {
-    position: absolute;
-    right: 5px;
-    top: 2px;
-    cursor: pointer;
-}
-
 </style>
 </head>
 
 <body>
 
-<div class="container">
-    <h1>You Chose to Care</h1>
+<h2>You Chose to Care</h2>
 
-    <p class="info">
-        Wildfires are destroying habitats. A few people choose to act instead of scroll.
-    </p>
+<button onclick="createAccount()">Create Account</button>
+<button onclick="toggleAdmin()">Toggle Admin</button>
+<button onclick="joinPeople()">Join People Who Care</button>
+<button onclick="addPost()">Add Post</button>
 
-    <div id="count">0 people</div>
+<div id="posts"></div>
 
-    <button onclick="join()">Join</button>
-    <button onclick="togglePanel()">People Who Care</button>
-</div>
-
-<!-- PANEL -->
-<div id="panel">
+<div class="peopleBox">
     <h3>People Who Care</h3>
-    <div id="nameList"></div>
-</div>
-
-<div class="divider"></div>
-
-<!-- POSTS -->
-<div id="posts">
-    <h2>Community Posts</h2>
-
-    <input id="postInput" placeholder="Write something..."
-        style="width:70%; padding:10px; border-radius:10px; border:none;">
-    <button onclick="addPost()">Post</button>
-
-    <div id="postList"></div>
+    <div id="people"></div>
 </div>
 
 <script>
-
 const PASSWORD = "Care2026";
 
-let data = JSON.parse(localStorage.getItem("data") || "[]");
-let posts = JSON.parse(localStorage.getItem("posts") || "[]");
+/* USER SYSTEM */
+let currentUser = localStorage.getItem("currentUser") || null;
+let isAdmin = localStorage.getItem("isAdmin") === "true";
 
-/* SAVE */
-function save() {
-    localStorage.setItem("data", JSON.stringify(data));
+/* DATA */
+let posts = JSON.parse(localStorage.getItem("posts")) || [];
+let comments = JSON.parse(localStorage.getItem("comments")) || {};
+let people = JSON.parse(localStorage.getItem("people")) || [];
+
+/* ACCOUNT */
+function createAccount() {
+    let name = prompt("Enter your name:");
+    if (!name) return;
+
+    currentUser = name;
+    localStorage.setItem("currentUser", name);
+    alert("Account created!");
+}
+
+function toggleAdmin() {
+    if (!isAdmin) {
+        if (prompt("Enter admin password:") === PASSWORD) {
+            isAdmin = true;
+            localStorage.setItem("isAdmin", "true");
+            alert("Admin mode ON");
+        } else {
+            alert("Wrong password");
+        }
+    } else {
+        isAdmin = false;
+        localStorage.setItem("isAdmin", "false");
+        alert("Admin mode OFF");
+    }
+}
+
+/* PEOPLE */
+function joinPeople() {
+    if (!currentUser && !isAdmin) {
+        alert("Create account first");
+        return;
+    }
+
+    if (!isAdmin) {
+        if (people.find(p => p.name === currentUser)) {
+            alert("You already joined!");
+            return;
+        }
+
+        let action = prompt("What did you do?");
+        if (!action) return;
+
+        people.push({ name: currentUser, action });
+
+    } else {
+        let name = prompt("Enter name:");
+        let action = prompt("Enter action:");
+        if (!name || !action) return;
+
+        people.push({ name, action });
+    }
+
+    savePeople();
+}
+
+function savePeople() {
+    localStorage.setItem("people", JSON.stringify(people));
+    renderPeople();
+}
+
+/* POSTS */
+function addPost() {
+    if (!currentUser && !isAdmin) {
+        alert("Create account first");
+        return;
+    }
+
+    let title = prompt("Title (optional):") || "";
+    let body = prompt("Write your post:");
+    let image = prompt("Image URL (optional):") || "";
+
+    if (!body) return;
+
+    let author = isAdmin
+        ? (confirm("Post as admin?") ? "ADMIN" : prompt("Enter name:"))
+        : currentUser;
+
+    posts.unshift({
+        title,
+        body,
+        image,
+        author,
+        likes: 0,
+        dislikes: 0
+    });
+
+    savePosts();
 }
 
 function savePosts() {
@@ -216,172 +189,101 @@ function savePosts() {
     renderPosts();
 }
 
-/* JOIN */
-function join() {
-    let name = prompt("Enter your name:");
-    if (!name) return;
-
-    let action = prompt("What will you do?");
-    data.push({ name: name.trim(), action: action || "" });
-
-    save();
-    render();
+/* REACTIONS */
+function react(i, type) {
+    if (type === "like") posts[i].likes++;
+    if (type === "dislike") posts[i].dislikes++;
+    savePosts();
 }
 
-/* RENDER PEOPLE */
-function render() {
-    document.getElementById("count").innerText = data.length + " people";
-
-    const list = document.getElementById("nameList");
-    list.innerHTML = "";
-
-    data.forEach((p, i) => {
-        const div = document.createElement("div");
-        div.className = "nameItem";
-
-        div.innerHTML = `
-            <span>${p.name}</span>
-            <span class="menuBtn" onclick="toggleMenu(${i})">⋯</span>
-
-            <div class="dropdown" id="menu-${i}">
-                <button onclick="viewAction(${i})">View</button>
-                <button onclick="editPerson(${i})">Edit</button>
-                <button onclick="deletePerson(${i})">Delete</button>
-            </div>
-        `;
-
-        list.appendChild(div);
-    });
-}
-
-/* MENU */
-function toggleMenu(i) {
-    document.querySelectorAll(".dropdown").forEach(d => d.style.display = "none");
-    const menu = document.getElementById("menu-" + i);
-    menu.style.display = menu.style.display === "flex" ? "none" : "flex";
-}
-
-/* VIEW (FIXED + IMPROVED) */
-function viewAction(i) {
-    let box = document.getElementById("viewBox");
-    if (!box) {
-        box = document.createElement("div");
-        box.id = "viewBox";
-        document.getElementById("panel").appendChild(box);
+/* COMMENTS */
+function addComment(i) {
+    if (!currentUser && !isAdmin) {
+        alert("Create account first");
+        return;
     }
 
-    box.innerHTML = `
-        <strong>${data[i].name}</strong><br>
-        ${data[i].action || "No action added"}
-    `;
+    let text = prompt("Write comment:");
+    if (!text) return;
+
+    let author = isAdmin
+        ? (confirm("Comment as admin?") ? "ADMIN" : prompt("Enter name:"))
+        : currentUser;
+
+    if (!comments[i]) comments[i] = [];
+
+    comments[i].push({ text, author });
+
+    saveComments();
 }
 
-/* EDIT */
-function editPerson(i) {
-    if (prompt("Password:") !== PASSWORD) return alert("Wrong password");
-
-    let name = prompt("Edit name:", data[i].name);
-    let action = prompt("Edit action:", data[i].action);
-
-    if (name) data[i].name = name;
-    data[i].action = action || "";
-
-    save();
-    render();
+function saveComments() {
+    localStorage.setItem("comments", JSON.stringify(comments));
+    renderPosts();
 }
 
 /* DELETE */
-function deletePerson(i) {
-    if (prompt("Password:") !== PASSWORD) return alert("Wrong password");
-
-    data.splice(i, 1);
-    save();
-    render();
-}
-
-/* POSTS */
-function addPost() {
-    let input = document.getElementById("postInput");
-    if (!input.value.trim()) return;
-
-    posts.push({
-        text: input.value,
-        likes: 0,
-        liked: false,
-        comments: []
-    });
-
-    input.value = "";
-    savePosts();
-}
-
-/* LIKE */
-function likePost(i) {
-    posts[i].liked = !posts[i].liked;
-    posts[i].likes += posts[i].liked ? 1 : -1;
-    savePosts();
-}
-
-/* COMMENT */
-function commentPost(i) {
-    let c = prompt("Comment:");
-    if (!c) return;
-
-    posts[i].comments.push(c);
-    savePosts();
-}
-
-/* DELETE COMMENT */
-function deleteComment(pi, ci) {
-    if (prompt("Password:") !== PASSWORD) return alert("Wrong password");
-
-    posts[pi].comments.splice(ci, 1);
+function deletePost(i) {
+    if (prompt("Password:") !== PASSWORD) return;
+    posts.splice(i, 1);
     savePosts();
 }
 
 /* RENDER POSTS */
 function renderPosts() {
-    const box = document.getElementById("postList");
-    box.innerHTML = "";
+    let container = document.getElementById("posts");
+    container.innerHTML = "";
 
     posts.forEach((p, i) => {
-        const div = document.createElement("div");
+        let div = document.createElement("div");
         div.className = "post";
 
         div.innerHTML = `
-            <div>${p.text}</div>
-
-            <div>
-                ❤️ ${p.likes}
-                <button onclick="likePost(${i})">
-                    ${p.liked ? "Unlike" : "Like"}
-                </button>
-                <button onclick="commentPost(${i})">Comment</button>
+            <div style="display:flex; justify-content:space-between;">
+                <strong>${p.author === "ADMIN" ? "👑 ADMIN" : p.author}</strong>
+                ${isAdmin ? `<span onclick="deletePost(${i})">🗑</span>` : ""}
             </div>
 
-            <div class="commentSection">
-                ${p.comments.map((c, ci) => `
-                    <div class="commentBox">
-                        💬 ${c}
-                        <span class="deleteIcon" onclick="deleteComment(${i}, ${ci})">🗑</span>
-                    </div>
+            ${p.title ? `<h3>${p.title}</h3>` : ""}
+            <p>${p.body}</p>
+            ${p.image ? `<img src="${p.image}" style="max-width:100%">` : ""}
+
+            <div>
+                👍 ${p.likes}
+                <button onclick="react(${i}, 'like')">Like</button>
+
+                👎 ${p.dislikes}
+                <button onclick="react(${i}, 'dislike')">Dislike</button>
+            </div>
+
+            <button onclick="addComment(${i})">Comment</button>
+
+            <div class="commentsBox">
+                ${(comments[i] || []).map(c => `
+                    <div><b>${c.author === "ADMIN" ? "👑 ADMIN" : c.author}:</b> ${c.text}</div>
                 `).join("")}
             </div>
         `;
 
-        box.appendChild(div);
+        container.appendChild(div);
     });
 }
 
-/* PANEL */
-function togglePanel() {
-    document.getElementById("panel").classList.toggle("active");
+/* RENDER PEOPLE */
+function renderPeople() {
+    let container = document.getElementById("people");
+    container.innerHTML = "";
+
+    people.forEach(p => {
+        let div = document.createElement("div");
+        div.innerHTML = `<b>${p.name}</b>: ${p.action}`;
+        container.appendChild(div);
+    });
 }
 
 /* INIT */
-render();
 renderPosts();
-
+renderPeople();
 </script>
 
 </body>
